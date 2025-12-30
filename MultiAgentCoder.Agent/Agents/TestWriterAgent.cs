@@ -45,60 +45,56 @@ public sealed class TestWriterAgent : ITestWriterAgent
             TopP = 0.9
         };
 
-        const int maxRetries = 3;
         string feedback = string.Empty;
 
-        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        var arguments = new KernelArguments(settings)
         {
+            ["code"] = artifact.Content,
+            ["Namespace"] = _projectService.CreateSafeNamespace(projectContext, new UnitTestCodeArtifacts() { CodeType = CodeType.UnitTestCode }),
+            ["feedback"] = feedback
+        };
 
-            var arguments = new KernelArguments(settings)
-            {
-                ["code"] = artifact.Content,
-                ["Namespace"] = _projectService.CreateSafeNamespace(projectContext, new UnitTestCodeArtifacts() { CodeType = CodeType.UnitTestCode }),
-                ["feedback"] = feedback
-            };
+        var result = await _kernel.InvokeAsync(
+            _generateTestsFunction,
+            arguments,
+            cancellationToken);
 
-            var result = await _kernel.InvokeAsync(
-                _generateTestsFunction,
-                arguments,
-                cancellationToken);
+        var testCode = CleanCode(result.GetValue<string>());
 
-            var testCode = CleanCode(result.GetValue<string>());
-
-            if (!IsLikelyComplete(testCode))
-            {
-                throw new InvalidOperationException("Generated test code appears to be incomplete.");
-            }
-
-            var guardrail = CSharpGuardrailValidator.ValidateUnitTest(testCode);
-
-            if (guardrail.IsValid)
-            {
-                return new UnitTestCodeArtifacts
-                {
-                    CodeType = CodeType.UnitTestCode,
-                    Content = testCode,
-                    SuggestedFileName = $"{Path.GetFileNameWithoutExtension(artifact.SuggestedFileName)}Tests.cs",
-                    Revision = artifact?.Revision is null ?  1 : ++artifact.Revision,
-                    Feedbacks = artifact?.Feedbacks ?? new List<string>(),
-                    LastUpdatedAt = DateTime.UtcNow,
-                    CreatedAt = artifact?.CreatedAt is null ? DateTime.UtcNow : artifact.CreatedAt
-                };
-            }
-
-
-            // Prepare feedback for retry
-            feedback = guardrail.Feedback;
-            _logger.LogWarning(
-                "Test generation failed guardrails (attempt {Attempt}): {Feedback}",
-                attempt, feedback);
+        if (!IsLikelyComplete(testCode))
+        {
+            throw new InvalidOperationException("Generated test code appears to be incomplete.");
         }
 
-    throw new InvalidOperationException(
-        "Failed to generate valid unit tests after multiple attempts."
-    );
+        var guardrail = CSharpGuardrailValidator.ValidateUnitTest(testCode);
 
-        
+        if (guardrail.IsValid)
+        {
+            return new UnitTestCodeArtifacts
+            {
+                CodeType = CodeType.UnitTestCode,
+                Content = testCode,
+                SuggestedFileName = $"{Path.GetFileNameWithoutExtension(artifact.SuggestedFileName)}Tests.cs",
+                Revision = artifact?.Revision is null ? 1 : ++artifact.Revision,
+                Feedbacks = artifact?.Feedbacks ?? new List<string>(),
+                LastUpdatedAt = DateTime.UtcNow,
+                CreatedAt = artifact?.CreatedAt is null ? DateTime.UtcNow : artifact.CreatedAt
+            };
+        }
+
+
+        // Prepare feedback for retry
+        feedback = guardrail.Feedback;
+        _logger.LogWarning(
+            "Test generation failed guardrails : {Feedback}",
+             feedback);
+
+
+        throw new InvalidOperationException(
+            "Failed to generate valid unit tests after multiple attempts."
+        );
+
+
     }
 
     private static string CleanCode(string? content)

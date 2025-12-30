@@ -9,6 +9,6 @@
   <Project Path="MultiAgentCoder.Console/MultiAgentCoder.Console.csproj" />
   <Project Path="MultiAgentCoder.Contracts/MultiAgentCoder.Contracts.csproj" />
   <Project Path="MultiAgentCoder.Infrastruture/MultiAgentCoder.Infrastruture.csproj" Id="b05011e5-3647-4418-888c-e3148408a799" />
-  <Project Path="MultiAgentCoder.Lib/MultiAgentCoder.Domain.csproj" />
+  <Project Path="MultiAgentCoder.Domain/MultiAgentCoder.Domain.csproj" />
   <Project Path="MultiAgentCoder.Tests/MultiAgentCoder.Tests.csproj" />
 </Solution>
