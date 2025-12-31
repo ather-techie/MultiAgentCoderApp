@@ -15,6 +15,8 @@ RULES (MANDATORY)
 9. Do NOT re-architect unless explicitly required by feedback.
 10. Prefer simplicity and correctness over cleverness.
 11. Create custom class with methods as needed to fulfill the requirements.
+12. Use meaningful names for classes, methods, variables, and namespaces.
+13. No static method unless asked for it.
 12. Dont add class or method stubs that are not directly required to solve the problem.
 13. Ensure proper error handling and input validation.
 14. Dont add Program class or Main method unless explicitly asked for.

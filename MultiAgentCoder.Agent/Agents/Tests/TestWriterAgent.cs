@@ -7,7 +7,7 @@ using MultiAgentCoder.Domain.Enums;
 using MultiAgentCoder.Domain.Models;
 using MultiAgentCoder.Infrastructure.Validation;
 
-namespace MultiAgentCoder.Agents.Agents;
+namespace MultiAgentCoder.Agents.Agents.Tests;
 
 public sealed class TestWriterAgent : ITestWriterAgent
 {
@@ -50,6 +50,7 @@ public sealed class TestWriterAgent : ITestWriterAgent
         var arguments = new KernelArguments(settings)
         {
             ["code"] = artifact.Content,
+            ["CodeNamespace"] = _projectService.CreateSafeNamespace(projectContext, artifact),
             ["Namespace"] = _projectService.CreateSafeNamespace(projectContext, new UnitTestCodeArtifacts() { CodeType = CodeType.UnitTestCode }),
             ["feedback"] = feedback
         };

@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
-using MultiAgentCoder.Agents.Agents;
+using MultiAgentCoder.Agents.Agents.Dev;
 using MultiAgentCoder.Agents.Agents.Interfaces;
+using MultiAgentCoder.Agents.Agents.Tests;
 using MultiAgentCoder.Agents.Services;
 using MultiAgentCoder.Agents.Services.Interfaces;
 using MultiAgentCoder.Console.Orchestration;

@@ -13,7 +13,7 @@ using System.Buffers.Text;
 using System.ComponentModel.DataAnnotations;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace MultiAgentCoder.Agents.Agents;
+namespace MultiAgentCoder.Agents.Agents.Dev;
 
 /// <summary>
 /// Semantic Kernel based agent responsible for generating and fixing C# code.

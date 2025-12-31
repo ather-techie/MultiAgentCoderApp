@@ -6,7 +6,7 @@ using MultiAgentCoder.Domain.Models;
 using MultiAgentCoder.Domain.Models.Results;
 using System.Diagnostics;
 
-namespace MultiAgentCoder.Agents.Agents;
+namespace MultiAgentCoder.Agents.Agents.Tests;
 
 public sealed class TestRunnerAgent : ITestRunnerAgent
 {

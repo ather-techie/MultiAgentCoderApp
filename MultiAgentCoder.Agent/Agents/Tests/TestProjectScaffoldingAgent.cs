@@ -5,7 +5,7 @@ using MultiAgentCoder.Agents.Services.Interfaces;
 using MultiAgentCoder.Domain.Enums;
 using MultiAgentCoder.Domain.Models;
 
-namespace MultiAgentCoder.Agents.Agents;
+namespace MultiAgentCoder.Agents.Agents.Tests;
 
 public sealed class TestProjectScaffoldingAgent : BaseScaffholdingAgent ,ITestScaffoldingAgent
 {

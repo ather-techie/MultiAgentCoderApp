@@ -1,9 +1,10 @@
 ﻿using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 using MultiAgentCoder.Agents.Agents.Interfaces;
 using MultiAgentCoder.Domain.Models;
 
 
-namespace MultiAgentCoder.Agents.Agents;
+namespace MultiAgentCoder.Agents.Agents.Dev;
 
 public class ReviewerAgent : IReviewerAgent
 {
@@ -24,7 +25,14 @@ public class ReviewerAgent : IReviewerAgent
 
     public async Task<string> ReviewAsync(string code, CancellationToken ct = default)
     {
-        var arguments = new KernelArguments
+        var settings = new OpenAIPromptExecutionSettings
+        {
+            MaxTokens = 1500,
+            Temperature = 0.2,
+            TopP = 0.9
+        };
+
+        var arguments = new KernelArguments (settings)
         {
             ["code"] = code
         };

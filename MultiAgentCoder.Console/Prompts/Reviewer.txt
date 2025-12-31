@@ -7,13 +7,15 @@ Instructions:
 - Respond ONLY with review comments.
 - If code is perfect, respond with: APPROVED.
 - provide output in json format as mentioned below.
+- For Critical issues that prevent code from functioning, respond with: CRITICAL.
+- If there are minor issues or suggestions for improvement, respond with: FEEDBACK.
 
 Input:
 {{$code}}
 
 Output format :
 {
-  "feedback": "APPROVED" or "FEEDBACK",
+  "feedback": "APPROVED" or "FEEDBACK" or "CRITICAL",
   "reviewComments": [
 	"Comment 1",
 	"Comment 2",

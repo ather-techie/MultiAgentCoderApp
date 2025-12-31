@@ -63,63 +63,79 @@ public sealed class HybridOrchestrator : IHybridOrchestrator
 
         var context = new WorkflowContext(problemStatement);
         string? feedback = null;
+        var reviewResult = new ReviewResult();
 
         var options = new JsonSerializerOptions
         {
             WriteIndented = true
         };
 
-        // STEP 1: Generate code        
-        _logger.LogInformation("Step 1 started");
-
-        context.CodeArtifact = await _coderAgent.GenerateCodeAsync(
-            projectContext,
-            context.CodeArtifact,
-            problemStatement,
-            feedback,
-            cancellationToken);
-
-        context.AdvanceTo(WorkflowStage.CodeGenerated);
-        var codeArtifact = context.CodeArtifact;
-
-
-        if (context.CodeArtifact is null)
+        for (var i = 0; i < 2; i++)
         {
-            return WorkflowResult.FailureResult(
-                context.CurrentStage, "Code generation process doesnt work"
-            );
-        }
 
-        _logger.LogInformation("Generated Code:");
-        _logger.LogInformation("--------------------------------------------------");
-        _logger.LogInformation(codeArtifact.Content);
+            // STEP 1: Generate code        
+            _logger.LogInformation($"Step 1 started {(i >= 1 ? "again" : string.Empty)}");
+
+            context.CodeArtifact = await _coderAgent.GenerateCodeAsync(
+                projectContext,
+                context.CodeArtifact ?? new CodeArtifact() { CodeType = CodeType.SourceCode },
+                problemStatement,
+                feedback,
+                cancellationToken);
+
+            context.AdvanceTo(WorkflowStage.CodeGenerated);
+            var codeArtifact = context.CodeArtifact;
 
 
-        // STEP 2: Review
-        _logger.LogInformation("Step 2 started");
-        
-        var reviewResultJson = await _reviewerAgent.ReviewAsync(codeArtifact.Content);
+            if (context.CodeArtifact is null)
+            {
+                return WorkflowResult.FailureResult(
+                    context.CurrentStage, "Code generation process doesnt work"
+                );
+            }
 
-        if (reviewResultJson is null)
-        {
-            return WorkflowResult.FailureResult(
-                context.CurrentStage, "Review process doesnt work"
-            );
-        }
-       
-        if (!string.IsNullOrWhiteSpace(reviewResultJson))
-        {
-            _logger.LogInformation("Reviewer Feedback:");
+            _logger.LogInformation("Generated Code:");
             _logger.LogInformation("--------------------------------------------------");
-            _logger.LogInformation(reviewResultJson);
+            _logger.LogInformation(codeArtifact.Content);
+
+
+            // STEP 2: Review
+            _logger.LogInformation("Step 2 started");
+
+            var reviewResultJson = await _reviewerAgent.ReviewAsync(codeArtifact.Content);
+
+            if (reviewResultJson is null)
+            {
+                return WorkflowResult.FailureResult(
+                    context.CurrentStage, "Review process doesnt work"
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(reviewResultJson))
+            {
+                _logger.LogInformation("Reviewer Feedback:");
+                _logger.LogInformation("--------------------------------------------------");
+                _logger.LogInformation(reviewResultJson);
+            }
+
+            reviewResult = JsonSerializer.Deserialize<ReviewResult>(reviewResultJson);
+
+            feedback = string.Join(",", (reviewResult?.ReviewComments?.ToArray()) ?? System.Array.Empty<string>());
+            codeArtifact.Feedbacks.Add(feedback);
+            context.AdvanceTo(WorkflowStage.CodeReviewed);
+
+            if (reviewResult?.IsApproved ?? false)
+            {
+                break;
+            }
         }
 
-        var reviewResult = JsonSerializer.Deserialize<ReviewResult>(reviewResultJson);
-
-        feedback = reviewResult?.Feedback ?? string.Empty;
-        context.AdvanceTo(WorkflowStage.CodeReviewed);
-        codeArtifact.Feedbacks.Add(feedback);
-
+        if (reviewResult?.IsCritical ?? false)
+        {
+            return WorkflowResult.FailureResult(
+                    context.CurrentStage, "Critical Feedback found in review process"
+                );
+        }
 
         // STEP 3: Save the generated file locally
         _logger.LogInformation("Step 3 started");

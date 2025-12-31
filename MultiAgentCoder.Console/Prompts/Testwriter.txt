@@ -7,8 +7,9 @@ Rules:
 - Do NOT include markdown formatting
 - Assume production code already compiles
 - Focus on behavior, not implementation details
+- Use Using namespace on top {{$CodeNamespace}}
 
-Recommendation Namespace:
+Recommendation unit test Namespace:
 {{$Namespace}}
 
 Production code:

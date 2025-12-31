@@ -6,8 +6,9 @@ using MultiAgentCoder.Domain.Enums;
 using MultiAgentCoder.Domain.Models;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using System.Linq;
 
-namespace MultiAgentCoder.Agents.Agents;
+namespace MultiAgentCoder.Agents.Agents.Dev;
 
 public sealed class ProjectScaffoldingAgent : BaseScaffholdingAgent, IProjectScaffoldingAgent
 {
@@ -100,6 +101,27 @@ public sealed class ProjectScaffoldingAgent : BaseScaffholdingAgent, IProjectSca
             return null;
         }
 
+        // Build instantiation code that handles both generic and non-generic classes.
+        string instantiationLine;
+        if (string.IsNullOrWhiteSpace(className))
+        {
+            instantiationLine = "// TODO: Instantiate generated class";
+        }
+        else if (className.Contains('<'))
+        {
+            var idx = className.IndexOf('<');
+            var baseName = className.Substring(0, idx);
+            var genericsInner = className.Substring(idx).Trim(); // e.g. "<T, U>"
+            var inner = genericsInner.Trim('<', '>').Trim();
+            var paramCount = string.IsNullOrWhiteSpace(inner) ? 0 : inner.Split(',').Length;
+            var genericArgs = paramCount == 0 ? "object" : string.Join(", ", Enumerable.Repeat("object", paramCount));
+            instantiationLine = $"var app = new {baseName}<{genericArgs}>();";
+        }
+        else
+        {
+            instantiationLine = $"var app = new {className}();";
+        }
+
 
         var programCsContent = $$"""
 using System;
@@ -111,9 +133,7 @@ public static class Program
     {
         Console.WriteLine("Application started.");
 
-        {{(string.IsNullOrWhiteSpace(className)
-            ? "// TODO: Instantiate generated class"
-            : $"var app = new {className}();")}}
+        {{instantiationLine}}
     }
 }
 """;
@@ -131,10 +151,16 @@ public static class Program
     {
         var match = Regex.Match(
             content,
-            @"\b(public|internal)\s+(sealed\s+|static\s+|partial\s+)?class\s+(?<name>\w+)",
+            @"\b(public|internal)\s+(?:sealed\s+|static\s+|partial\s+)?class\s+(?<name>\w+)(?<generics>\s*<[^>{}]+>)?",
             RegexOptions.Multiline);
 
-        return match.Success ? match.Groups["name"].Value : null;
+        if (!match.Success)
+            return null;
+
+        var name = match.Groups["name"].Value;
+        var generics = match.Groups["generics"].Value;
+
+        return string.IsNullOrWhiteSpace(generics) ? name : name + generics.Trim();
     }
 
     public async Task<CodeArtifact> EnsureProgramCsSetup(ProjectContext projectContext, CodeArtifact artifact)
