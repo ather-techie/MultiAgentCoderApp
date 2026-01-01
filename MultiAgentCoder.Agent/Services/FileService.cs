@@ -1,5 +1,5 @@
 ﻿using Google.Cloud.AIPlatform.V1;
-using MultiAgentCoder.Agents.Agents.Interfaces;
+using MultiAgentCoder.Agents.CoreAgents.Interfaces;
 using MultiAgentCoder.Agents.Services.Interfaces;
 using MultiAgentCoder.Domain.Enums;
 using MultiAgentCoder.Domain.Models;
@@ -68,7 +68,7 @@ public sealed class FileService : IFileService
         return true;
     }
 
-    public (bool Exists, string TestDirPath ) DirectoryExists(ProjectContext projectContext,BaseCodeArtifacts artifacts)
+    public (bool Exists, string TestDirPath ) DirectoryExists(ProjectSpec projectContext,BaseCodeArtifacts artifacts)
     {
         ArgumentNullException.ThrowIfNull(artifacts);
 
@@ -95,7 +95,7 @@ public sealed class FileService : IFileService
         return path;
     }
 
-    public string GetProjectWorkingDirectory(ProjectContext projectContext, BaseCodeArtifacts artifact)
+    public string GetProjectWorkingDirectory(ProjectSpec projectContext, BaseCodeArtifacts artifact)
     {
         var projectPath = _projectService.CreateProjectName(projectContext, artifact);
 

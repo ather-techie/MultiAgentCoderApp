@@ -1,4 +1,5 @@
 ﻿using MultiAgentCoder.Domain.Enums;
+using MultiAgentCoder.Domain.Models.Base;
 
 namespace MultiAgentCoder.Domain.Models;
 
@@ -25,7 +26,7 @@ public sealed class WorkflowResult
     /// <summary>
     /// Generated code artifact (if available).
     /// </summary>
-    public CodeArtifact? CodeArtifact { get; init; }
+    public BaseCodeArtifacts? CodeArtifact { get; init; }
 
     /// <summary>
     /// Optional diagnostic or failure details.
@@ -37,7 +38,7 @@ public sealed class WorkflowResult
     public static WorkflowResult SuccessResult(
         WorkflowStage finalStage,
         string summary,
-        CodeArtifact artifact)
+        BaseCodeArtifacts artifact)
     {
         return new WorkflowResult
         {

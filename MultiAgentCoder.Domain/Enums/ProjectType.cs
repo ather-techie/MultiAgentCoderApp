@@ -3,6 +3,7 @@
 public enum ProjectType
 {
     Executable,
+    Console,
     Library,
     Test
 }

@@ -13,11 +13,11 @@ public sealed class WorkflowContext
 
     public Guid WorkflowId { get; } = Guid.NewGuid();
 
-    public string ProblemStatement { get; }
+    public string ProblemStatement { get; set; }
 
     public WorkflowStage CurrentStage { get; private set; }
 
-    public ProjectContext Project { get; init; } = default!;
+    //public ProjectSpec Project { get; init; } = default!;
 
     public CodeArtifact? CodeArtifact { get; set; }
 

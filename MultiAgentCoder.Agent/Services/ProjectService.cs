@@ -21,7 +21,7 @@ namespace MultiAgentCoder.Agents.Services
                 : "GeneratedProject";
         }
 
-        public string CreateProjectName(ProjectContext projectContext, BaseCodeArtifacts artifact)
+        public string CreateProjectName(ProjectSpec projectContext, BaseCodeArtifacts artifact)
         {
             var type = string.Empty;
             switch (artifact.CodeType)
@@ -40,7 +40,7 @@ namespace MultiAgentCoder.Agents.Services
 
         }
 
-        public string CreateSafeNamespace(ProjectContext projectContext, BaseCodeArtifacts artifact)
+        public string CreateSafeNamespace(ProjectSpec projectContext, BaseCodeArtifacts artifact)
         {
             var projectName = CreateProjectName(projectContext, artifact);
             // Replace invalid namespace characters

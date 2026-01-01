@@ -1,5 +1,5 @@
 ﻿//using AutoGen.Core;
-//using MultiAgentCoder.Agents.Agents;
+//using MultiAgentCoder.Agents.CoreAgents;
 //using MultiAgentCoder.Agents.Tools.Interfaces;
 //using MultiAgentCoder.Domain.Models;
 

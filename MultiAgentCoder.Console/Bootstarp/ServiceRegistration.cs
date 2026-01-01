@@ -1,16 +1,20 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using AutoGen.Core;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
-using MultiAgentCoder.Agents.Agents.Dev;
-using MultiAgentCoder.Agents.Agents.Interfaces;
-using MultiAgentCoder.Agents.Agents.Tests;
+using MultiAgentCoder.Agents.CoreAgents.Dev;
+using MultiAgentCoder.Agents.CoreAgents.Interfaces;
+using MultiAgentCoder.Agents.CoreAgents.Ops;
+using MultiAgentCoder.Agents.CoreAgents.Tests;
+using MultiAgentCoder.Agents.RoleAgents;
+using MultiAgentCoder.Agents.RoleAgents.Interfaces;
 using MultiAgentCoder.Agents.Services;
 using MultiAgentCoder.Agents.Services.Interfaces;
+using MultiAgentCoder.Console.Cli;
+using MultiAgentCoder.Console.Cli.Commands;
+using MultiAgentCoder.Console.Cli.Interfaces;
 using MultiAgentCoder.Console.Orchestration;
 using MultiAgentCoder.Console.Orchestration.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace MultiAgentCoder.Console.Bootstarp
 {
@@ -49,17 +53,27 @@ namespace MultiAgentCoder.Console.Bootstarp
             });
 
             // Agents
-            services.AddTransient<ICoderWritterAgent, CodeWritterrAgent>();
-            services.AddTransient<IReviewerAgent, ReviewerAgent>();    
+            services.AddTransient<ICodeWriterAgent, CodeWriterAgent>();
+            services.AddTransient<ICodeReviewerAgent, CodeReviewerAgent>();    
             services.AddTransient<IBuildAgent, BuildAgent>();
             services.AddTransient<IProjectScaffoldingAgent, ProjectScaffoldingAgent>();
             services.AddTransient<ITestWriterAgent, TestWriterAgent>();
             services.AddTransient<ITestScaffoldingAgent, TestProjectScaffoldingAgent>();
             services.AddTransient<ITestRunnerAgent, TestRunnerAgent>();
 
+            //Role Agents
+            services.AddTransient<IDevAgent, DevAgent>();
+            services.AddTransient<IQaAgent, QaAgent>();
+
+
             // services
             services.AddTransient<IFileService, FileService>();
             services.AddTransient<IProjectService, ProjectService>();
+
+            // CLI setup
+            services.AddTransient<ICliRouter,CliRouter>();
+            services.AddTransient<IGenerateCommand,GenerateCommand>();
+            services.AddTransient<IRunCommand, RunCommand>();
 
 
             // Orchestration
