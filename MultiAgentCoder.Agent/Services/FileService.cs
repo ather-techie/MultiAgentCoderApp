@@ -68,7 +68,7 @@ public sealed class FileService : IFileService
         return true;
     }
 
-    public (bool Exists, string TestDirPath ) DirectoryExists(ProjectSpec projectContext,BaseCodeArtifacts artifacts)
+    public (bool Exists, string DirPath) DirectoryExists(ProjectSpec projectContext,BaseCodeArtifacts artifacts)
     {
         ArgumentNullException.ThrowIfNull(artifacts);
 
@@ -78,28 +78,62 @@ public sealed class FileService : IFileService
         return (Directory.Exists(projectDir),projectDir);
     }
 
-    public string GetRootDirectory(string? projectName = null)
+
+    public string LoadFile(ProjectSpec project, BaseCodeArtifacts artifacts)
     {
-        var safeName = string.IsNullOrWhiteSpace(projectName)
-            ? "GeneratedProject"
-            : projectName;
+        ArgumentNullException.ThrowIfNull(project?.CodeFileWithExtension);
 
-        var basePath = AppContext.BaseDirectory;
+        var result = DirectoryExists(project, artifacts);
 
-        var path = Path.Combine(
-            basePath,
-            "MultiAgentCoder",
-            safeName,
-            Guid.NewGuid().ToString("N"));
+        if (result.Exists)
+        {
+            var filePath = Path.Combine(result.DirPath, project.CodeFileWithExtension);
+            if (File.Exists(filePath))
+            {
+                return File.ReadAllText(filePath);
+            }
+            else
+            {
+                //search file in all folder and subfolder
+               var files = Directory.GetFiles(result.DirPath, project.CodeFileWithExtension, SearchOption.AllDirectories);
+                if (files.Length > 0)
+                {
+                     return File.ReadAllText(files[0]);
+                }
+                else
+                {
+                     throw new FileNotFoundException($"File {project.CodeFileWithExtension} not found in directory {result.DirPath}");
+                }
+            }
+        }
 
-        return path;
+        throw new DirectoryNotFoundException($"Project directory not found: {result.DirPath}");
     }
+
+    //public string GetRootDirectory(string? projectName = null)
+    //{
+    //    var safeName = string.IsNullOrWhiteSpace(projectName)
+    //        ? "GeneratedProject"
+    //        : projectName;
+
+    //    var basePath = AppContext.BaseDirectory;
+
+    //    var path = Path.Combine(
+    //        basePath,
+    //        "MultiAgentCoder",
+    //        safeName,
+    //        Guid.NewGuid().ToString("N"));
+
+    //    return path;
+    //}
 
     public string GetProjectWorkingDirectory(ProjectSpec projectContext, BaseCodeArtifacts artifact)
     {
-        var projectPath = _projectService.CreateProjectName(projectContext, artifact);
+        //var projectPath = _projectService.CreateProjectName(projectContext, artifact);
 
-        return Path.Combine(projectContext.RootWorkingDirectory, projectPath);
+        var projectName = _projectService.GetProjectName(projectContext, artifact);
+
+        return Path.Combine(projectContext.CodeRootWorkingDirectory, projectName);
     }
 
     //public string CreateProjectName(ProjectContext projectContext, BaseCodeArtifacts artifact)

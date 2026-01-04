@@ -21,5 +21,6 @@ Output format :
 	"Comment 2",
 	"...",
 	"Comment N"
-  ]
+  ],
+  "confidenceScore": 0-100
 }

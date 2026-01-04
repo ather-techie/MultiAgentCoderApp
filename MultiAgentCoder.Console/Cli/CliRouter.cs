@@ -2,7 +2,9 @@
 using Microsoft.Extensions.Logging;
 using MultiAgentCoder.Console.Cli.Commands;
 using MultiAgentCoder.Console.Cli.Interfaces;
+using MultiAgentCoder.Domain.Models;
 using System;
+using static Google.Api.Gax.Grpc.Gcp.AffinityConfig.Types;
 
 namespace MultiAgentCoder.Console.Cli;
 
@@ -19,30 +21,40 @@ public sealed class CliRouter : ICliRouter
         _logger = logger;
     }
 
-    public async Task RouteAsync(string[] args)
+    public async Task<WorkflowResult> RouteAsync(string[] args)
     {
         if (args.Length == 0)
         {
             PrintHelp();
-            return;
+
+            return new WorkflowResult
+            {
+                Success = true,
+                ErrorDetails = "Help displayed"
+            };
         }
 
-        await (args[0].ToLowerInvariant() switch
-        {
-            // macode generate code | tests
-            "generate" => _generateCommand
-                .ExecuteAsync(args.Skip(1).ToArray()),
+        var command = args[0].ToLowerInvariant();
+        var remainingArgs = args.Skip(1).ToArray();
 
-            // macode run tests | build
-            "run" => _runCommand
-                .ExecuteAsync(args.Skip(1).ToArray()),
+        switch (command)
+        {
+            case "generate":
+                return await _generateCommand.ExecuteAsync(remainingArgs);
+
+            case "run":
+                return await _runCommand.ExecuteAsync(remainingArgs);
 
             // future commands
-            // "fix" => _fixCommand.ExecuteAsync(args.Skip(1).ToArray()),
-            // "scaffold" => _scaffoldCommand.ExecuteAsync(args.Skip(1).ToArray()),
+            // case "fix":
+            //     return await _fixCommand.ExecuteAsync(remainingArgs);
 
-            _ => UnknownCommand()
-        });
+            // case "scaffold":
+            //     return await _scaffoldCommand.ExecuteAsync(remainingArgs);
+
+            default:
+                return UnknownCommand();
+        }
     }
 
 
@@ -60,9 +72,14 @@ public sealed class CliRouter : ICliRouter
         """);
     }
 
-    private Task UnknownCommand()
+    private WorkflowResult UnknownCommand()
     {
         _logger.LogError("Unknown command");
-        return Task.CompletedTask;
+        
+        return new WorkflowResult
+        {
+            Success = false,
+            ErrorDetails = "Unknown command. Use 'generate', 'run', 'fix', or 'scaffold'."
+        };
     }
 }

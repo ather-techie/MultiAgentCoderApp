@@ -1,5 +1,4 @@
-﻿using AutoGen.Core;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using MultiAgentCoder.Agents.CoreAgents.Dev;
@@ -58,6 +57,7 @@ namespace MultiAgentCoder.Console.Bootstarp
             services.AddTransient<IBuildAgent, BuildAgent>();
             services.AddTransient<IProjectScaffoldingAgent, ProjectScaffoldingAgent>();
             services.AddTransient<ITestWriterAgent, TestWriterAgent>();
+            services.AddTransient<ITestReviewerAgent, TestReviewerAgent>();
             services.AddTransient<ITestScaffoldingAgent, TestProjectScaffoldingAgent>();
             services.AddTransient<ITestRunnerAgent, TestRunnerAgent>();
 

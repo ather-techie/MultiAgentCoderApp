@@ -17,12 +17,12 @@ public sealed class GenerateCommand : IGenerateCommand
     private readonly IDevAgent _devAgent;
     private readonly IQaAgent _qaAgent;
     private readonly IHybridOrchestrator _hybridOrchestrator;
-    private readonly ILogger<GenerateCommand> _logger; 
+    private readonly ILogger<GenerateCommand> _logger;
 
     public GenerateCommand(
         IDevAgent devAgent,
         IQaAgent qaAgent,
-        HybridOrchestrator hybridOrchestrator,
+        IHybridOrchestrator hybridOrchestrator,
         ILogger<GenerateCommand> logger)
     {
         _devAgent = devAgent;
@@ -31,54 +31,46 @@ public sealed class GenerateCommand : IGenerateCommand
         _logger = logger;
     }
 
-    public async Task ExecuteAsync(string[] args)
+    public async Task<WorkflowResult> ExecuteAsync(string[] args)
     {
         if (args.Length == 0)
         {
             // or: return Fail("Specify 'code' or 'tests'");
-            return;
+            return new WorkflowResult()
+            {
+                Success = false,
+                ErrorDetails = "Specify 'code', 'tests', or 'full' as the first argument."
+            };
         }
 
         var spec = new ProjectSpec().Fill(args.Skip(1).ToArray());
         var context = new WorkflowContext(spec.ProblemStatement);
 
-        await (args[0].ToLowerInvariant() switch
+        switch (args[0].ToLowerInvariant())
         {
-            "code" => _devAgent.ExecuteAsync(context, spec),
+            case "code":
+                return await _devAgent.ExecuteAsync(context, spec);
 
-            "tests" => _qaAgent.ExecuteAsync(context, spec),
+            case "tests":
+            case "test":
+                return await _qaAgent.ExecuteAsync(context, spec);
 
-            "full" => _hybridOrchestrator.ExecuteAsync(spec),
+            case "full":
+                return await _hybridOrchestrator.ExecuteAsync(spec);
 
-            _ => FailAsync("Invalid generate option")
-        });
+            default:
+                return FailAsync("Invalid generate option");
+        }
     }
 
-
-    //private async Task<int> GenerateCode()
-    //{
-    //    var result = await _codeWriter.GenerateCodeAsync()
-    //    return PrintResult(result);
-    //}
-
-    //private async Task<int> GenerateTests()
-    //{
-    //    var result = await _testWriter.ExecuteAsync();
-    //    return PrintResult(result);
-    //}
-
-    //private static int PrintResult(AgentResult result)
-    //{
-    //    Console.WriteLine(result.IsSuccess
-    //        ? "✔ Success"
-    //        : "✖ Failed");
-
-    //    return result.IsSuccess ? 0 : 1;
-    //}
-
-    private Task FailAsync(string message)
+    private WorkflowResult FailAsync(string message)
     {
         _logger.LogError(message);
-        return Task.CompletedTask;
+
+        return new WorkflowResult()
+        {
+            Success = false,
+            ErrorDetails = message
+        };
     }
 }

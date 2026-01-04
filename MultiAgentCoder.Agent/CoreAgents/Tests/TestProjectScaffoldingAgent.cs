@@ -41,8 +41,8 @@ public sealed class TestProjectScaffoldingAgent : BaseScaffholdingAgent ,ITestSc
         //    : projectContext.Descriptor.Name + ".Tests";
 
 
-        var safeName = _projectService.CreateProjectName(projectContext, artifact);
-        var safeReferrenceName = _projectService.CreateProjectName(projectContext, new CodeArtifact() { CodeType = CodeType.SourceCode });
+        var safeName = _projectService.GetProjectName(projectContext, artifact);
+        var safeReferrenceName = _projectService.GetProjectName(projectContext, new CodeArtifact() { CodeType = CodeType.SourceCode });
 
         var csprojContent = $$"""
 <Project Sdk="Microsoft.NET.Sdk">

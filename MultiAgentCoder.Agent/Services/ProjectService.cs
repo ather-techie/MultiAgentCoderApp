@@ -21,10 +21,30 @@ namespace MultiAgentCoder.Agents.Services
                 : "GeneratedProject";
         }
 
-        public string CreateProjectName(ProjectSpec projectContext, BaseCodeArtifacts artifact)
+        //public static string CreateProjectName(ProjectSpec projectContext, BaseCodeArtifacts artifact)
+        //{
+        //    var type = string.Empty;
+        //    switch (artifact.CodeType)
+        //    {
+        //        case CodeType.SourceCode:
+        //            type = ".Code";
+        //            break;
+        //        case CodeType.UnitTestCode:
+        //            type = ".Tests";
+        //            break;
+        //        default:
+        //            break;
+        //    }
+
+        //    return $"{projectContext.Descriptor.Name}{type}";
+
+        //}
+
+
+        public static string CreateProjectName(string projectName, CodeType codeType)
         {
             var type = string.Empty;
-            switch (artifact.CodeType)
+            switch (codeType)
             {
                 case CodeType.SourceCode:
                     type = ".Code";
@@ -36,13 +56,39 @@ namespace MultiAgentCoder.Agents.Services
                     break;
             }
 
-            return $"{projectContext.Descriptor.Name}{type}";
+            return $"{projectName}{type}";
 
+        }
+
+        public static string GetRootDirectory(string? projectName = null)
+        {
+            var safeName = string.IsNullOrWhiteSpace(projectName)
+                ? "GeneratedProject"
+                : projectName;
+
+            var basePath = AppContext.BaseDirectory;
+
+            var path = Path.Combine(
+                basePath,
+                "MultiAgentCoder",
+                safeName,
+                Guid.NewGuid().ToString("N"));
+
+            return path;
+        }
+
+        public string GetProjectName(ProjectSpec projectContext, BaseCodeArtifacts artifact)
+        {
+            return artifact.CodeType == CodeType.SourceCode
+                ? projectContext.Descriptor.CodeProjectName
+                : projectContext.Descriptor.UnitTestProjectName;
         }
 
         public string CreateSafeNamespace(ProjectSpec projectContext, BaseCodeArtifacts artifact)
         {
-            var projectName = CreateProjectName(projectContext, artifact);
+            //var projectName = CreateProjectName(projectContext, artifact);
+            var projectName = GetProjectName(projectContext, artifact);
+
             // Replace invalid namespace characters
             var builder = new StringBuilder();
             foreach (var ch in projectName)

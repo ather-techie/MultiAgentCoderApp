@@ -44,7 +44,7 @@ public sealed class ProjectScaffoldingAgent : BaseScaffholdingAgent, IProjectSca
         //    ? "GeneratedProject"
         //    : projectContext.Descriptor.Name;
 
-        var safeName = _projectService.CreateProjectName(projectContext, artifact);
+        var safeName = _projectService.GetProjectName(projectContext, artifact);
 
 
         //TODO: Enhance to support different project types, frameworks, etc.
@@ -94,7 +94,7 @@ public sealed class ProjectScaffoldingAgent : BaseScaffholdingAgent, IProjectSca
     private CodeArtifact? CreateProgramCs(ProjectSpec projectContext, CodeArtifact artifact)
     {
         var className = ExtractPrimaryClassName(artifact.Content) ?? "MyClass";
-        var safeName = _projectService.CreateProjectName(projectContext, artifact);
+        var safeName = _projectService.GetProjectName(projectContext, artifact);
 
         if (projectContext.Descriptor.Type != ProjectType.Executable)
         {

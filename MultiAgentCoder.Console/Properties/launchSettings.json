@@ -2,7 +2,7 @@
   "profiles": {
     "MultiAgentCoder.Console": {
       "commandName": "Project",
-      "commandLineArgs": "generate code --problem=\"write program to add two numbers\""
+      "commandLineArgs": "generate full \n    --problem=\"write program to add two numbers\" \n    --name=CalculatorApp\n    --out=\"C:\\output\"\n    --qa-out=\"C:\\output\""
     }
   }
 }

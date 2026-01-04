@@ -34,11 +34,11 @@ public abstract class BaseScaffholdingAgent : IBaseScaffholdingAgent
             Directory.Delete(projectPath, recursive: true);
         }
 
-        var projectName = _projectService.CreateProjectName(projectContext, artifact);
+        var projectName = _projectService.GetProjectName(projectContext, artifact);
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        await _fileService.WriteAsync(projectContext.RootWorkingDirectory, projectName, artifact.SuggestedFileName, artifact.Content, cancellationToken);
+        await _fileService.WriteAsync(projectContext.CodeRootWorkingDirectory, projectName, artifact.SuggestedFileName, artifact.Content, cancellationToken);
     }
 
     public async Task WriteAsync(
@@ -51,7 +51,7 @@ public abstract class BaseScaffholdingAgent : IBaseScaffholdingAgent
 
         foreach (var artifact in supportingArtifacts)
         {
-            await _fileService.WriteAsync(projectContext.RootWorkingDirectory, artifact.WorkingDirectory, artifact.SuggestedFileName, artifact.Content, cancellationToken);
+            await _fileService.WriteAsync(projectContext.CodeRootWorkingDirectory, artifact.WorkingDirectory, artifact.SuggestedFileName, artifact.Content, cancellationToken);
         }
     }
 

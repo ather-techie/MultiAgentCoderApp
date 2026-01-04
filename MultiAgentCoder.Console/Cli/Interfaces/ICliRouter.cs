@@ -1,7 +1,9 @@
-﻿namespace MultiAgentCoder.Console.Cli.Interfaces
+﻿using MultiAgentCoder.Domain.Models;
+
+namespace MultiAgentCoder.Console.Cli.Interfaces
 {
     public interface ICliRouter
     {
-        Task RouteAsync(string[] args);
+        Task<WorkflowResult> RouteAsync(string[] args);
     }
 }

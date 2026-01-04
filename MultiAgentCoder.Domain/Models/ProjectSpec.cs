@@ -29,10 +29,17 @@ public sealed class ProjectSpec
 
     public ProjectDescriptor Descriptor { get; set; } = new();
 
+    public string? CodeFileWithExtension { get; set; }
+
     /// <summary>
     /// Where generated code should be written.
     /// </summary>
-    public string RootWorkingDirectory { get; set; } = string.Empty;
+    public string CodeRootWorkingDirectory { get; set; }
+
+    /// <summary>
+    /// Where generated code should be written.
+    /// </summary>
+    public string UnitTestRootWorkingDirectory { get; set; }
 
     /// <summary>
     /// Type of project being generated.

@@ -10,7 +10,18 @@ services.Register();
 var provider = services.BuildServiceProvider();
 
 var router = provider.GetRequiredService<ICliRouter>();
-await router.RouteAsync(args);
+var result = await router.RouteAsync(args);
+
+// 5. Final outcome
+Console.WriteLine(result.Success
+    ? "Workflow completed successfully"
+    : "Workflow failed");
+
+Console.WriteLine(result.Summary);
+
+// Wait for user input before closing
+Console.WriteLine("Press any key to exit...");
+Console.ReadKey();
 
 
 

@@ -1,4 +1,5 @@
-﻿using MultiAgentCoder.Domain.Enums;
+﻿using MultiAgentCoder.Agents.Services;
+using MultiAgentCoder.Domain.Enums;
 using MultiAgentCoder.Domain.Models;
 
 namespace MultiAgentCoder.Console.Extensions;
@@ -27,7 +28,20 @@ public static class ProjectSpecExtensions
         spec.Descriptor.TargetFramework = Get(dict, "framework", spec.Descriptor.TargetFramework ?? "net8.0");
         spec.Descriptor.RootNamespace = Get(dict, "namespace", spec.Descriptor.RootNamespace ?? spec.Descriptor.Name);
 
-        spec.RootWorkingDirectory = Get(dict, "out", spec.RootWorkingDirectory ?? "output");
+        spec.CodeFileWithExtension = Get(dict, "code-file", null);
+
+        // Project name setup
+        spec.Descriptor.CodeProjectName = Get(dict, "proj-name", spec.Descriptor.CodeProjectName ?? ProjectService.CreateProjectName(spec.Descriptor.Name, CodeType.SourceCode));
+
+        spec.Descriptor.UnitTestProjectName = Get(dict, "ut-proj-name", spec.Descriptor.UnitTestProjectName ?? ProjectService.CreateProjectName(spec.Descriptor.Name, CodeType.UnitTestCode));
+
+
+        // Root directory setup for c# code and unit tests
+        var defaultRootDirectory = ProjectService.GetRootDirectory(spec.Descriptor.Name);
+
+        spec.CodeRootWorkingDirectory = Get(dict, "out", spec.CodeRootWorkingDirectory ?? defaultRootDirectory);
+
+        spec.UnitTestRootWorkingDirectory = Get(dict, "qa-out", spec.CodeRootWorkingDirectory ?? defaultRootDirectory);
 
         spec.ProjectType = Enum.TryParse<ProjectType>(
             Get(dict, "type", spec.ProjectType.ToString()),
@@ -97,6 +111,10 @@ public static class ProjectSpecExtensions
 
         return dict;
     }
+
+
+
+    
 
     private static string? Get(
         Dictionary<string, string> dict,

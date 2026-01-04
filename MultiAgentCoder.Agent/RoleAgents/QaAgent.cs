@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Google.Cloud.AIPlatform.V1;
+using Microsoft.Extensions.Logging;
 using MultiAgentCoder.Agents.CoreAgents.Interfaces;
 using MultiAgentCoder.Agents.RoleAgents.Interfaces;
 using MultiAgentCoder.Agents.Services.Interfaces;
@@ -16,6 +17,7 @@ public class QaAgent : IQaAgent
     private readonly IBuildAgent _buildAgent;
     private readonly IFileService _fileService;
     private readonly ITestWriterAgent _testWriterAgent;
+    private readonly ITestReviewerAgent _reviewerAgent;
     private readonly ITestScaffoldingAgent _testScaffoldingAgent;
     private readonly ITestRunnerAgent _testRunnerAgent;
     private readonly ILogger<QaAgent> _logger;
@@ -25,6 +27,7 @@ public class QaAgent : IQaAgent
         IBuildAgent buildAgent,
         IFileService fileService,
         ITestWriterAgent testWriterAgent,
+        ITestReviewerAgent reviewerAgent,
         ITestScaffoldingAgent testScaffoldingAgent,
         ITestRunnerAgent testRunnerAgent,
         ILogger<QaAgent> logger)
@@ -32,6 +35,7 @@ public class QaAgent : IQaAgent
         _buildAgent = buildAgent;
         _fileService = fileService;
         _testWriterAgent = testWriterAgent;
+        _reviewerAgent = reviewerAgent;
         _testScaffoldingAgent = testScaffoldingAgent;
         _testRunnerAgent = testRunnerAgent;
         _logger = logger;
@@ -42,21 +46,33 @@ public class QaAgent : IQaAgent
          ProjectSpec project,
          CancellationToken cancellationToken = default)
     {
-        project.RootWorkingDirectory = _fileService.GetRootDirectory();
+        //project.CodeRootWorkingDirectory = _fileService.GetRootDirectory();
 
         //var context = new WorkflowContext(project.ProblemStatement);
         context.ProblemStatement = project.ProblemStatement;
         string? feedback = null;
         var reviewResult = new ReviewResult();
+        context.CodeArtifact = context.CodeArtifact ?? new CodeArtifact()
+        {
+            CodeType = CodeType.SourceCode                        
+        };
+
+        if (string.IsNullOrEmpty(context.CodeArtifact.Content))
+        {
+            context.CodeArtifact.Content = _fileService.LoadFile(project, context.CodeArtifact);
+        }
 
         var options = new JsonSerializerOptions
         {
             WriteIndented = true
         };
 
-        // Step 7 started : Unit testing
-        _logger.LogInformation("Step 7 started");
-        context.UnitTestArtifact = await _testWriterAgent.GenerateTestsAsync(project, context.CodeArtifact);
+        // Generate UT and review
+        for (var i = 0; i < 3; i++)
+        {
+            // Step 7 started : Generate Unit testing
+            _logger.LogInformation($"Step 7 started {(i >= 1 ? "again" : string.Empty)}");
+            context.UnitTestArtifact = await _testWriterAgent.GenerateTestsAsync(project, context.CodeArtifact,feedback);
 
         if (context.UnitTestArtifact is null)
         {
@@ -69,10 +85,46 @@ public class QaAgent : IQaAgent
         _logger.LogInformation("--------------------------------------------------");
         _logger.LogInformation(context.UnitTestArtifact.Content);
 
+            // Step 8 started : Review Unit tests
+            var reviewResultJson = await _reviewerAgent.ReviewAsync(context.CodeArtifact.Content,context.UnitTestArtifact.Content);
+
+            if (reviewResultJson is null)
+            {
+                return WorkflowResult.FailureResult(
+                    context.CurrentStage, "Review process doesnt work"
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(reviewResultJson))
+            {
+                _logger.LogInformation("Reviewer Feedback:");
+                _logger.LogInformation("--------------------------------------------------");
+                _logger.LogInformation(reviewResultJson);
+            }
+
+            reviewResult = JsonSerializer.Deserialize<ReviewResult>(reviewResultJson);
+
+            feedback = string.Join(",", (reviewResult?.ReviewComments?.ToArray()) ?? System.Array.Empty<string>());
+            context.UnitTestArtifact.Feedbacks.Add(feedback);
+            context.AdvanceTo(WorkflowStage.CodeReviewed);
+
+            if (reviewResult?.IsApproved ?? false)
+            {
+                break;
+            }
+        }
+
+        if (reviewResult?.IsCritical ?? false)
+        {
+            return WorkflowResult.FailureResult(
+                    context.CurrentStage, "Critical Feedback found in review process"
+                );
+        }
+
         // Step 8 started : Unit testing
         _logger.LogInformation("Step 8 started");
 
-        await _testScaffoldingAgent.WriteAsync(project, context.UnitTestArtifact);
+        await _testScaffoldingAgent.WriteAsync(project, context.UnitTestArtifact,false);
         context.UnitTestArtifact.WorkingDirectory = _fileService.GetProjectWorkingDirectory(project, context.UnitTestArtifact);
         _logger.LogInformation($"Unit tests Code saved to: {context.UnitTestArtifact.WorkingDirectory}");
 
@@ -119,34 +171,58 @@ public class QaAgent : IQaAgent
             );
         }
 
-        // Step 9 started : Run Unit tests
-        _logger.LogInformation("Step 12 started");
-        var testRunResult = await _testRunnerAgent.RunAsync(project, context.UnitTestArtifact);
-
-        if (testRunResult != null)
+        // Run Unit test and fix any failures
+        for (int i = 0; i < 3; i++)
         {
-            _logger.LogInformation("Test Result:");
-            _logger.LogInformation("--------------------------------------------------");
-            _logger.LogInformation(JsonSerializer.Serialize(testRunResult));
-            _logger.LogInformation("--------------------------------------------------");
+            // Step 9 started : Run Unit tests
+            _logger.LogInformation("Step 12 started");
+            var testRunResult = await _testRunnerAgent.RunAsync(project, context.UnitTestArtifact);
 
-            if (!testRunResult.IsSuccess)
+            if (testRunResult != null)
             {
-                context.AdvanceTo(WorkflowStage.TestsPassed);
+                _logger.LogInformation("Test Result:");
+                _logger.LogInformation("--------------------------------------------------");
+                _logger.LogInformation(JsonSerializer.Serialize(testRunResult));
+                _logger.LogInformation("--------------------------------------------------");
+
+                if (testRunResult.IsSuccess)
+                {
+                    context.AdvanceTo(WorkflowStage.TestsPassed);
+                    break;
+                }
+            }
+
+            if (testRunResult != null && !testRunResult.IsSuccess)
+            {
+                context.AdvanceTo(WorkflowStage.TestsFailed);
+
+                context.CodeArtifact.Feedbacks.AddRange(testRunResult.Errors);
+                feedback = string.Join(Environment.NewLine, testRunResult.Errors);
+
+                _logger.LogInformation($"Step 7 started {(i >= 1 ? "again" : string.Empty)}");
+                context.UnitTestArtifact = await _testWriterAgent.GenerateTestsAsync(project, context.CodeArtifact, feedback);
+
+                if (context.UnitTestArtifact is null)
+                {
+                    return WorkflowResult.FailureResult(
+                        context.CurrentStage, "Unit tests code generation process doesnt work"
+                    );
+                }
+
+                _logger.LogInformation("Generated Unit tests:");
+                _logger.LogInformation("--------------------------------------------------");
+                _logger.LogInformation(context.UnitTestArtifact.Content);
             }
         }
 
-        if (testRunResult != null && !testRunResult.IsSuccess)
+        if (context.CurrentStage == WorkflowStage.TestsFailed)
         {
-            context.AdvanceTo(WorkflowStage.TestsFailed);
-
-            context.CodeArtifact.Feedbacks.AddRange(testRunResult.Errors);
-            feedback = string.Join(Environment.NewLine, testRunResult.Errors);
-
             return WorkflowResult.FailureResult(
                 context.CurrentStage, "Test Failed"
             );
         }
+
+       
 
         return WorkflowResult.SuccessResult(
             context.CurrentStage, "QA process completed successfully", context.UnitTestArtifact

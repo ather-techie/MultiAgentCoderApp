@@ -34,6 +34,7 @@ public sealed class TestWriterAgent : ITestWriterAgent
     public async Task<UnitTestCodeArtifacts> GenerateTestsAsync(
         ProjectSpec projectContext,
         CodeArtifact artifact,
+        string? feedback = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(artifact);
@@ -44,8 +45,6 @@ public sealed class TestWriterAgent : ITestWriterAgent
             Temperature = 0.2,
             TopP = 0.9
         };
-
-        string feedback = string.Empty;
 
         var arguments = new KernelArguments(settings)
         {
@@ -64,36 +63,53 @@ public sealed class TestWriterAgent : ITestWriterAgent
 
         if (!IsLikelyComplete(testCode))
         {
+            _logger.LogWarning(
+                "Generated test code appears to be incomplete for artifact {ArtifactFileName}",
+                artifact.SuggestedFileName);
+            _logger.LogDebug("Generated test code: {TestCode}", testCode);
             throw new InvalidOperationException("Generated test code appears to be incomplete.");
         }
 
-        var guardrail = CSharpGuardrailValidator.ValidateUnitTest(testCode);
+        //var guardrail = CSharpGuardrailValidator.ValidateUnitTest(testCode);
 
-        if (guardrail.IsValid)
+        //if (guardrail.IsValid)
+        //{
+        //    return new UnitTestCodeArtifacts
+        //    {
+        //        CodeType = CodeType.UnitTestCode,
+        //        Content = testCode,
+        //        SuggestedFileName = $"{Path.GetFileNameWithoutExtension(artifact.SuggestedFileName)}Tests.cs",
+        //        Revision = artifact?.Revision is null ? 1 : ++artifact.Revision,
+        //        Feedbacks = artifact?.Feedbacks ?? new List<string>(),
+        //        LastUpdatedAt = DateTime.UtcNow,
+        //        CreatedAt = artifact?.CreatedAt is null ? DateTime.UtcNow : artifact.CreatedAt
+        //    };
+        //}
+
+
+        //// Prepare feedback for retry
+        //feedback = guardrail.Feedback;
+        //_logger.LogWarning(
+        //    "Test generation failed guardrails : {Feedback}",
+        //     feedback);
+
+        //_logger.LogDebug("Generated test code: {TestCode}", testCode);
+        //_logger.LogDebug("Guardrail feedback: {Feedback}", feedback);
+
+        //throw new InvalidOperationException(
+        //    "Failed to generate valid unit tests after multiple attempts."
+        //);
+
+        return new UnitTestCodeArtifacts
         {
-            return new UnitTestCodeArtifacts
-            {
-                CodeType = CodeType.UnitTestCode,
-                Content = testCode,
-                SuggestedFileName = $"{Path.GetFileNameWithoutExtension(artifact.SuggestedFileName)}Tests.cs",
-                Revision = artifact?.Revision is null ? 1 : ++artifact.Revision,
-                Feedbacks = artifact?.Feedbacks ?? new List<string>(),
-                LastUpdatedAt = DateTime.UtcNow,
-                CreatedAt = artifact?.CreatedAt is null ? DateTime.UtcNow : artifact.CreatedAt
-            };
-        }
-
-
-        // Prepare feedback for retry
-        feedback = guardrail.Feedback;
-        _logger.LogWarning(
-            "Test generation failed guardrails : {Feedback}",
-             feedback);
-
-
-        throw new InvalidOperationException(
-            "Failed to generate valid unit tests after multiple attempts."
-        );
+            CodeType = CodeType.UnitTestCode,
+            Content = testCode,
+            SuggestedFileName = $"{Path.GetFileNameWithoutExtension(artifact.SuggestedFileName)}Tests.cs",
+            Revision = artifact?.Revision is null ? 1 : ++artifact.Revision,
+            Feedbacks = artifact?.Feedbacks ?? new List<string>(),
+            LastUpdatedAt = DateTime.UtcNow,
+            CreatedAt = artifact?.CreatedAt is null ? DateTime.UtcNow : artifact.CreatedAt
+        };
 
 
     }

@@ -31,7 +31,7 @@ The system is designed for **research, experimentation, and production-grade aut
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/ather-techie/MultiAgentCodeApp.git
+   git clone https://github.com/ather-techie/MultiAgentCoderApp.git
    ```
 
 2. Change into the project directory:
@@ -47,17 +47,59 @@ The system is designed for **research, experimentation, and production-grade aut
 
 ---
 
-## Usage
+## Usage - RUN with command line
 
-The console project is the main entry point.
+The console project is the main entry point. The console application runs an interactive orchestrator that prompts for a problem statement and executes the multi-agent workflow.
 
-Run the orchestrator locally:
-
-```bash
-dotnet run --project MultiAgentCoder.Console
-```
+Provide a concise description of the requirement and the orchestrator will coordinate agents to analyze, scaffold, generate code, and validate output.
 
 Configuration is driven via `appsettings.json`, including model selection and endpoints.
+
+### sample with minimal parameters
+macode generate code --problem="write program to add two numbers" 
+
+macode generate full --problem="write program to add two numbers" 
+
+macode generate full 
+    --problem="write program to add two numbers" 
+    --name=CalculatorApp
+    --out="C:\output"
+    --qa-out="C:\output"
+
+macode generate test
+    --name=GeneratedProject
+    --code-file="Sum.cs"
+    --proj-name=CalculatorApp.Code
+    --ut-proj-name=CalculatorApp.Tests
+    --out="C:\output"
+    --qa-out="C:\output"
+
+### sample with all parameters
+macode generate code \
+  --problem="Build a number addition service" \
+  --description="Console app with clean code and unit tests" \
+  --name=NumberAdder \
+  --language=C# \
+  --framework=net8.0 \
+  --namespace=NumberAdder.Core \
+  --proj-name=NumberAdder.Code \
+  --ut-proj-name=NumberAdder.Tests \
+  --out="C:/Generated/NumberAdder" \
+  --qa-out="C:/Generated/NumberAdder" \
+  --type=Console \
+  --code=true \
+  --scaffold=true \
+  --review=true \
+  --tests=true \
+  --build=true \
+  --failfast=true \
+  --maxfix=2
+
+  ### TODO CLI Commands 
+  macode init → generates projectspec.json
+  macode validate → validates spec + CLI
+  macode explain → prints what agents will run
+  Auto-generated --help from ProjectSpec
 
 ---
 
@@ -66,14 +108,16 @@ Configuration is driven via `appsettings.json`, including model selection and en
 ```
 MultiAgentCoderApp/
 │
-├── MultiAgentCoder.Agents        # Agent implementations
+├── MultiAgentCoder.Agent*        # Agent implementations (project folder name: `MultiAgentCoder.Agent`)
 ├── MultiAgentCoder.Console       # Orchestrator and entry point
 ├── MultiAgentCoder.Contracts     # DTOs and contracts
 ├── MultiAgentCoder.Domain        # Domain models and enums
-├── MultiAgentCoder.Infrastructure# External integrations
+├── MultiAgentCoder.Infrastruture  # External integrations (note: project folder spelling matches repository)
 ├── MultiAgentCoder.Tests         # Unit and integration tests
 └── docs                          # Documentation
 ```
+
+*Some project folder names may vary slightly from the logical component name — consult the solution file or project list for exact paths.
 
 ---
 
@@ -83,12 +127,12 @@ Agents are small, focused components that perform a single task in the code-gene
 
 ### Examples
 
-- **Analysis Agent** – Interprets requirements and produces a plan
-- **Project Scaffolding Agent** – Creates buildable project structures
-- **Code Writer Agent** – Generates source code
-- **Test Writer Agent** – Generates unit tests
-- **Test Runner Agent** – Builds projects and executes tests
-- **Documentation Agent** – Produces README and usage docs
+- `Analysis Agent` – Interprets requirements and produces a plan
+- `Project Scaffolding Agent` – Creates buildable project structures
+- `Code Writer Agent` – Generates source code
+- `Test Writer Agent` – Generates unit tests
+- `Test Runner Agent` – Builds projects and executes tests
+- `Documentation Agent` – Produces README and usage docs
 
 Agents do **not** call each other directly.  
 All execution is coordinated by the orchestrator.
@@ -159,12 +203,12 @@ dotnet test
 
 - Web UI for orchestration and monitoring
 - Distributed agent execution
-- Capability to run Agents independenlty when requested.
+- Capability to run Agents independently when requested
 - Support for languages other than C#
 - Support integrate with existing applications
 - Integration with additional LLM providers
 - Enhanced logging and telemetry
-- Plugin architecture for custom agents-
+- Plugin architecture for custom agents
 - CI/CD pipeline generation
 - Improved guardrails and validation
 - Expanded test coverage

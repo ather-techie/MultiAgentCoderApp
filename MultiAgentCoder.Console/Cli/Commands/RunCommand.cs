@@ -4,6 +4,7 @@ using MultiAgentCoder.Agents.CoreAgents.Tests;
 using MultiAgentCoder.Console.Cli.Interfaces;
 using MultiAgentCoder.Console.Orchestration;
 using MultiAgentCoder.Console.Orchestration.Interfaces;
+using MultiAgentCoder.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -26,7 +27,7 @@ public sealed class RunCommand : IRunCommand
         _logger = logger;
     }
 
-    public async Task<int> ExecuteAsync(string[] args)
+    public async Task<WorkflowResult> ExecuteAsync(string[] args)
     {
         return args.FirstOrDefault() switch
         {
@@ -49,9 +50,14 @@ public sealed class RunCommand : IRunCommand
     //    //return result.IsSuccess ? 0 : 1;
     //}
 
-    private  int Fail(string msg)
+    private  WorkflowResult Fail(string msg)
     {
         _logger.LogError(msg);
-        return 1;
+        
+        return new WorkflowResult
+        {
+            Success = false,
+            ErrorDetails = msg
+        };
     }
 }

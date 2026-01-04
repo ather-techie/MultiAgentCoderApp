@@ -53,7 +53,7 @@ public class DevAgent : IDevAgent
         //    RootWorkingDirectory = _fileService.GetRootDirectory()
         //};
 
-        project.RootWorkingDirectory = _fileService.GetRootDirectory();
+        //project.CodeRootWorkingDirectory = _fileService.GetRootDirectory();
 
         //var context = new WorkflowContext(project.ProblemStatement);
         context.ProblemStatement = project.ProblemStatement;
@@ -65,7 +65,9 @@ public class DevAgent : IDevAgent
             WriteIndented = true
         };
 
-        for (var i = 0; i < 2; i++)
+        _logger.LogInformation($"Problem Statement: {context.ProblemStatement}");
+
+        for (var i = 0; i < 3; i++)
         {
 
             // STEP 1: Generate code        

@@ -10,4 +10,8 @@ public sealed class ProjectDescriptor
 
     public string Language { get; set; }
     public string? RootNamespace { get; set; }
+
+    public string CodeProjectName { get; set; }
+
+    public string UnitTestProjectName { get; set; }
 }

@@ -7,6 +7,7 @@ Rules:
 - Do NOT include markdown formatting
 - Assume production code already compiles
 - Focus on behavior, not implementation details
+- Use method return type like async, Task if applicable
 - Use Using namespace on top {{$CodeNamespace}}
 
 Recommendation unit test Namespace:
@@ -23,3 +24,12 @@ Instructions:
 5. Use a single test class per production class
 
 Return ONLY valid C# code.
+
+Feedback from previous step (may be empty):
+{{$feedback}}
+
+TASK
+- If feedback is empty:
+  - Write the initial implementation.
+- If feedback is not empty:
+  - Revise the existing implementation to address the feedback.
