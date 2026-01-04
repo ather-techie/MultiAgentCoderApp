@@ -5,6 +5,7 @@ using MultiAgentCoder.Domain.Models.Base;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MultiAgentCoder.Agents.Services
 {
@@ -39,6 +40,39 @@ namespace MultiAgentCoder.Agents.Services
         //    return $"{projectContext.Descriptor.Name}{type}";
 
         //}
+
+        public  string? ExtractPrimaryClassName(string content)
+        {
+            var match = Regex.Match(
+                content,
+                @"\b(public|internal)\s+(?:sealed\s+|static\s+|partial\s+)?class\s+(?<name>\w+)(?<generics>\s*<[^>{}]+>)?",
+                RegexOptions.Multiline);
+
+            if (!match.Success)
+                return null;
+
+            var name = match.Groups["name"].Value;
+            var generics = match.Groups["generics"].Value;
+
+            return string.IsNullOrWhiteSpace(generics) ? name : name + generics.Trim();
+        }
+
+        public  string? ExtractNamespace(string content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+                return null;
+
+            // Match both file-scoped and block-scoped namespaces
+            var match = Regex.Match(
+                content,
+                @"^\s*namespace\s+(?<name>[\w\.]+)\s*(?:;|\{)",
+                RegexOptions.Multiline);
+
+            if (!match.Success)
+                return null;
+
+            return match.Groups["name"].Value;
+        }
 
 
         public static string CreateProjectName(string projectName, CodeType codeType)

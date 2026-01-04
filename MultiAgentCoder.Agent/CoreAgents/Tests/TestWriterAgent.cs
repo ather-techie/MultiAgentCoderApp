@@ -48,7 +48,7 @@ public sealed class TestWriterAgent : ITestWriterAgent
         var arguments = new KernelArguments(settings)
         {
             ["code"] = artifact.Content,
-            ["CodeNamespace"] = _projectService.CreateSafeNamespace(projectContext, artifact),
+            ["CodeNamespace"] = _projectService.ExtractNamespace(artifact.Content),
             ["Namespace"] = _projectService.CreateSafeNamespace(projectContext, new UnitTestCodeArtifacts() { CodeType = CodeType.UnitTestCode }),
             ["feedback"] = feedback
         };

@@ -93,8 +93,12 @@ public sealed class ProjectScaffoldingAgent : BaseScaffholdingAgent, IProjectSca
 
     private CodeArtifact? CreateProgramCs(ProjectSpec projectContext, CodeArtifact artifact)
     {
-        var className = ExtractPrimaryClassName(artifact.Content) ?? "MyClass";
-        var safeName = _projectService.GetProjectName(projectContext, artifact);
+        var namespaceName = _projectService.ExtractNamespace(artifact.Content);
+        var className = _projectService.ExtractPrimaryClassName(artifact.Content);
+        var usingStatement = string.IsNullOrWhiteSpace(namespaceName)
+            ? string.Empty
+            : $"using {namespaceName};";
+        //var safeName = _projectService.GetProjectName(projectContext, artifact);
 
         if (projectContext.Descriptor.Type != ProjectType.Executable)
         {
@@ -125,7 +129,7 @@ public sealed class ProjectScaffoldingAgent : BaseScaffholdingAgent, IProjectSca
 
         var programCsContent = $$"""
 using System;
-using {{safeName}};
+{{usingStatement}}
 
 public static class Program
 {
@@ -147,21 +151,8 @@ public static class Program
         };
     }
 
-    private static string? ExtractPrimaryClassName(string content)
-    {
-        var match = Regex.Match(
-            content,
-            @"\b(public|internal)\s+(?:sealed\s+|static\s+|partial\s+)?class\s+(?<name>\w+)(?<generics>\s*<[^>{}]+>)?",
-            RegexOptions.Multiline);
 
-        if (!match.Success)
-            return null;
 
-        var name = match.Groups["name"].Value;
-        var generics = match.Groups["generics"].Value;
-
-        return string.IsNullOrWhiteSpace(generics) ? name : name + generics.Trim();
-    }
 
     public async Task<CodeArtifact> EnsureProgramCsSetup(ProjectSpec projectContext, CodeArtifact artifact)
     {
