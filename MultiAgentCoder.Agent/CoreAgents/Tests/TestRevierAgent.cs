@@ -1,7 +1,6 @@
 ﻿using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using MultiAgentCoder.Agents.CoreAgents.Interfaces;
-using MultiAgentCoder.Domain.Models;
 
 
 namespace MultiAgentCoder.Agents.CoreAgents.Tests;

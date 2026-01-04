@@ -5,7 +5,6 @@ using MultiAgentCoder.Agents.CoreAgents.Interfaces;
 using MultiAgentCoder.Agents.Services.Interfaces;
 using MultiAgentCoder.Domain.Enums;
 using MultiAgentCoder.Domain.Models;
-using MultiAgentCoder.Infrastructure.Validation;
 
 namespace MultiAgentCoder.Agents.CoreAgents.Tests;
 

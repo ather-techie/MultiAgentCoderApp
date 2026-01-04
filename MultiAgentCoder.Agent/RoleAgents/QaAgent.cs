@@ -1,5 +1,4 @@
-﻿using Google.Cloud.AIPlatform.V1;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using MultiAgentCoder.Agents.CoreAgents.Interfaces;
 using MultiAgentCoder.Agents.RoleAgents.Interfaces;
 using MultiAgentCoder.Agents.Services.Interfaces;

@@ -1,7 +1,6 @@
-﻿namespace MultiAgentCoder.Agents.CoreAgents.Interfaces
+﻿namespace MultiAgentCoder.Agents.CoreAgents.Interfaces;
+
+public interface ITestReviewerAgent
 {
-    public interface ITestReviewerAgent
-    {
-        Task<string> ReviewAsync(string code, string utcode, CancellationToken ct = default);
-    }
+    Task<string> ReviewAsync(string code, string utcode, CancellationToken ct = default);
 }
