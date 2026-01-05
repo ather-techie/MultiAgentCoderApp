@@ -11,13 +11,16 @@ namespace MultiAgentCoder.Agents.CoreAgents.Tests;
 public sealed class TestRunnerAgent : ITestRunnerAgent
 {
     private readonly IFileService _fileService;
+    private readonly IAIOutputCleanerService _cleanerService;
     private readonly ILogger<TestRunnerAgent> _logger;
 
     public TestRunnerAgent(
         IFileService fileService,
+        IAIOutputCleanerService cleanerService,
         ILogger<TestRunnerAgent> logger)
     {
         _fileService = fileService;
+        _cleanerService = cleanerService;
         _logger = logger;
     }
 

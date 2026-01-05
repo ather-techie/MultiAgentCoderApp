@@ -24,16 +24,19 @@ public sealed class CodeWriterAgent : ICodeWriterAgent
     private readonly ILogger<CodeWriterAgent> _logger;
     private readonly IFileService _fileService;
     private readonly IProjectService _projectService;
+    private readonly IAIOutputCleanerService _cleanerService;
     private readonly KernelFunction _generateCodeFunction;
 
     public CodeWriterAgent(Kernel kernel,
         IFileService fileService,
         IProjectService projectService,
+        IAIOutputCleanerService cleanerService,
         ILogger<CodeWriterAgent> logger)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
         _projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
+        _cleanerService = cleanerService;
         _logger = logger;
 
         _generateCodeFunction = KernelFunctionFactory.CreateFromPrompt(

@@ -69,6 +69,7 @@ namespace MultiAgentCoder.Console.Bootstarp
             // services
             services.AddTransient<IFileService, FileService>();
             services.AddTransient<IProjectService, ProjectService>();
+            services.AddTransient<IAIOutputCleanerService, AIOutputCleanerService>();
 
             // CLI setup
             services.AddTransient<ICliRouter,CliRouter>();

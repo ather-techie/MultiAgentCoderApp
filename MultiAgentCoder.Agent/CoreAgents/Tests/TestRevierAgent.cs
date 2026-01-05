@@ -1,6 +1,7 @@
 ﻿using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using MultiAgentCoder.Agents.CoreAgents.Interfaces;
+using MultiAgentCoder.Agents.Services.Interfaces;
 
 
 namespace MultiAgentCoder.Agents.CoreAgents.Tests;
@@ -9,9 +10,12 @@ public class TestReviewerAgent : ITestReviewerAgent
 {
     private readonly Kernel _kernel;
     private readonly KernelFunction _reviewFunction;
+    private readonly IAIOutputCleanerService _cleanerService;
 
-    public TestReviewerAgent(Kernel kernel)
+    public TestReviewerAgent(Kernel kernel
+        ,IAIOutputCleanerService cleanerService)
     {
+        _cleanerService = cleanerService;
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
 
         // Load prompt template for review
@@ -40,7 +44,7 @@ public class TestReviewerAgent : ITestReviewerAgent
         var result = await _kernel.InvokeAsync(_reviewFunction, arguments, ct);
         var feedback = result.GetValue<string>()?.Trim();
 
-        var clearFeedback = RemoveMarkdownJsonFence(feedback);
+        var clearFeedback = _cleanerService.RemoveMarkdownJsonFence(feedback);
 
         return clearFeedback ?? "No feedback generated";
     }
@@ -56,29 +60,4 @@ public class TestReviewerAgent : ITestReviewerAgent
         return File.ReadAllText(promptPath);
     }
 
-    private static string RemoveMarkdownJsonFence(string input)
-    {
-        if (string.IsNullOrWhiteSpace(input))
-            return input;
-
-        input = input.Trim();
-
-        // Remove starting ```json or ```
-        if (input.StartsWith("```"))
-        {
-            var firstNewLine = input.IndexOf('\n');
-            if (firstNewLine > -1)
-            {
-                input = input[(firstNewLine + 1)..];
-            }
-        }
-
-        // Remove ending ```
-        if (input.EndsWith("```"))
-        {
-            input = input[..input.LastIndexOf("```", StringComparison.Ordinal)].Trim();
-        }
-
-        return input.Trim();
-    }
 }

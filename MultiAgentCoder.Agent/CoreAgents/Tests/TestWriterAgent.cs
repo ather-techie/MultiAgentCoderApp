@@ -13,14 +13,17 @@ public sealed class TestWriterAgent : ITestWriterAgent
     private readonly Kernel _kernel;
     private readonly KernelFunction _generateTestsFunction;
     private readonly IProjectService _projectService;
+    private readonly IAIOutputCleanerService _cleanerService;
     private readonly ILogger<TestWriterAgent> _logger;
 
     public TestWriterAgent(Kernel kernel,
         IProjectService projectService,
+        IAIOutputCleanerService cleanerService,
         ILogger<TestWriterAgent> logger)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         _projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
+        _cleanerService = cleanerService;
         _logger = logger;
 
         _generateTestsFunction =
@@ -58,7 +61,7 @@ public sealed class TestWriterAgent : ITestWriterAgent
             arguments,
             cancellationToken);
 
-        var testCode = CleanCode(result.GetValue<string>());
+        var testCode = _cleanerService.RemoveMarkdownCSharpFence(result.GetValue<string>());
 
         if (!IsLikelyComplete(testCode))
         {
@@ -113,16 +116,7 @@ public sealed class TestWriterAgent : ITestWriterAgent
 
     }
 
-    private static string CleanCode(string? content)
-    {
-        if (string.IsNullOrWhiteSpace(content))
-            return string.Empty;
-
-        return content
-            .Replace("```csharp", "")
-            .Replace("```", "")
-            .Trim();
-    }
+    
 
     private bool IsLikelyComplete(string code)
     {
